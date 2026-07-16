@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Download, Calendar } from 'lucide-react';
+import { apiUrl } from '../config';
 
 interface Movimiento {
   id: string;
@@ -37,7 +38,7 @@ export function ReportesPage() {
   async function loadMovimientos() {
     setLoading(true);
     try {
-      const response = await fetch('/api/movimientos?page=1&pageSize=500');
+      const response = await fetch(apiUrl('/api/movimientos?page=1&pageSize=500'));
       if (!response.ok) throw new Error('Error al cargar movimientos');
 
       const data: PaginatedResponse<Movimiento> = await response.json();

@@ -1,0 +1,13 @@
+{
+  "name": "Casa106 Web",
+  "buildCommand": "cd src/Casa106.Web && npm run build",
+  "outputDirectory": "src/Casa106.Web/dist",
+  "env": {
+    "VITE_API_URL": "@vite_api_url"
+  },
+  "git": {
+    "deploymentEnabled": {
+      "main": true
+    }
+  }
+}

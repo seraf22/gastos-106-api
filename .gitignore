@@ -23,3 +23,16 @@
 /.vs/Casa106/v18
 .vs/Casa106/DesignTimeBuild/.dtbcache.v2
 .vs/gestorGastos106/copilot-chat/c66a4d26/sessions/a6535bf6-cb4d-4bcf-bfea-470d682be90a
+
+# Environment files
+.env
+.env.local
+.env.production.local
+.env.development.local
+*.local
+
+# Temporary files
+.appmod/
+
+/DbCheckTemp/obj
+/DbCheckTemp/bin

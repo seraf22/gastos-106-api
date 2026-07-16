@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Trash2, Edit2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { apiUrl } from '../config';
 
 interface Movimiento {
   id: string;
@@ -32,7 +33,7 @@ export function MovimientosPage() {
   async function loadMovimientos() {
     setLoading(true);
     try {
-      const response = await fetch(`/api/movimientos?page=${page}&pageSize=20`);
+      const response = await fetch(apiUrl(`/api/movimientos?page=${page}&pageSize=20`));
       if (!response.ok) throw new Error('Error al cargar movimientos');
 
       const data: PaginatedResponse<Movimiento> = await response.json();
@@ -57,7 +58,7 @@ export function MovimientosPage() {
     if (!confirm('¿Estás seguro de que deseas eliminar este movimiento?')) return;
 
     try {
-      const response = await fetch(`/api/movimientos/${id}`, {
+      const response = await fetch(apiUrl(`/api/movimientos/${id}`), {
         method: 'DELETE',
       });
 

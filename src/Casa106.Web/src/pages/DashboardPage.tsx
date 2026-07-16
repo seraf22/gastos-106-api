@@ -3,6 +3,7 @@ import { DollarSign, TrendingUp, TrendingDown, Calendar } from 'lucide-react';
 import { StatCard } from '../components/StatCard';
 import { Chart } from '../components/Chart';
 import { MovimientosTable } from '../components/MovimientosTable';
+import { apiUrl } from '../config';
 
 interface Movimiento {
   id: string;
@@ -40,7 +41,7 @@ export function DashboardPage() {
   async function loadMovimientos() {
     setLoading(true);
     try {
-      const response = await fetch('/api/movimientos?page=1&pageSize=100');
+      const response = await fetch(apiUrl('/api/movimientos?page=1&pageSize=100'));
       if (!response.ok) {
         throw new Error('No se pudo obtener la información de movimientos.');
       }

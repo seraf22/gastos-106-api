@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Save, AlertCircle, CheckCircle } from 'lucide-react';
+import { apiUrl } from '../config';
 
 interface Categoria {
   id: string;
@@ -30,7 +31,7 @@ export function NuevoMovimientoPage() {
 
   async function loadCategorias() {
     try {
-      const response = await fetch('/api/categorias');
+      const response = await fetch(apiUrl('/api/categorias'));
       if (!response.ok) throw new Error('Error al cargar categorías');
       const data = await response.json();
       setCategorias(data);
@@ -50,7 +51,7 @@ export function NuevoMovimientoPage() {
     }
 
     try {
-      const response = await fetch('/api/movimientos', {
+      const response = await fetch(apiUrl('/api/movimientos'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

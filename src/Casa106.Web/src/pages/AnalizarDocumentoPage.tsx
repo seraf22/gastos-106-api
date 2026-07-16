@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Upload, CheckCircle, AlertCircle } from 'lucide-react';
+import { apiUrl } from '../config';
 
 interface AnalysisResult {
   tipo?: string;
@@ -48,7 +49,7 @@ export function AnalizarDocumentoPage() {
     formData.append('archivo', archivo);
 
     try {
-      const response = await fetch(`/api/analisis/documento?guardar=${guardar}`, {
+      const response = await fetch(apiUrl(`/api/analisis/documento?guardar=${guardar}`), {
         method: 'POST',
         body: formData,
       });

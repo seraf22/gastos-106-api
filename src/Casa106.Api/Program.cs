@@ -20,11 +20,16 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// DbContext
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
-    ?? "Server=(localdb)\\mssqllocaldb;Database=Casa106;Trusted_Connection=true;";
+// DbContext (PostgreSQL / Aiven)
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+
+if (string.IsNullOrWhiteSpace(connectionString))
+{
+    throw new InvalidOperationException("Falta 'ConnectionStrings:DefaultConnection' para PostgreSQL.");
+}
+
 builder.Services.AddDbContext<Casa106DbContext>(options =>
-    options.UseSqlServer(connectionString));
+    options.UseNpgsql(connectionString));
 
 // Repositories
 builder.Services.AddScoped<IMovimientoRepository, MovimientoRepository>();
@@ -34,8 +39,19 @@ builder.Services.AddScoped<IDocumentoRepository, DocumentoRepository>();
 
 // Infrastructure Services
 builder.Services.AddScoped<IFinancialDocumentAnalyzer, FakeFinancialDocumentAnalyzer>();
-builder.Services.AddScoped<IDocumentStorage>(sp => new LocalDocumentStorage(
-    Path.Combine(builder.Environment.ContentRootPath, "uploads")));
+
+var cloudinaryConfig = builder.Configuration.GetSection("Cloudinary");
+if (!string.IsNullOrWhiteSpace(cloudinaryConfig["CloudName"]) &&
+    !string.IsNullOrWhiteSpace(cloudinaryConfig["ApiKey"]) &&
+    !string.IsNullOrWhiteSpace(cloudinaryConfig["ApiSecret"]))
+{
+    builder.Services.AddScoped<IDocumentStorage, CloudinaryDocumentStorage>();
+}
+else
+{
+    builder.Services.AddScoped<IDocumentStorage>(sp => new LocalDocumentStorage(
+        Path.Combine(builder.Environment.ContentRootPath, "uploads")));
+}
 
 // CORS
 builder.Services.AddCors(options =>
@@ -50,11 +66,11 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// Migrate database on startup
+// Inicializar y seed de base de datos
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<Casa106DbContext>();
-    db.Database.EnsureCreated(); // Crea la base de datos y tablas si no existen
+    await db.Database.MigrateAsync();
     await SeedDatabase(db);
 }
 
@@ -72,216 +88,49 @@ app.MapControllers();
 
 app.Run();
 
-// Seed Database
 static async Task SeedDatabase(Casa106DbContext context)
 {
-    if (context.Propiedades.Any())
-        return; // Ya está seeded
+    if (await context.Propiedades.AnyAsync())
+        return;
 
-    using var transaction = await context.Database.BeginTransactionAsync();
-    try
+    var propiedad = new Casa106.Domain.Entities.Propiedad
     {
-        // Crear propiedad
-        var propiedad = new Casa106.Domain.Entities.Propiedad
-        {
-            Id = Guid.NewGuid(),
-            Nombre = "Casa 106",
-            Direccion = "Pucón",
-            Unidad = "106",
-            Activa = true,
-            FechaCreacion = DateTime.UtcNow
-        };
-        context.Propiedades.Add(propiedad);
+        Id = Guid.NewGuid(),
+        Nombre = "Casa 106",
+        Direccion = "Pucón",
+        Unidad = "106",
+        Activa = true,
+        FechaCreacion = DateTime.UtcNow
+    };
 
-        // Crear categorías de ingreso
-        var categoriasIngreso = new[]
-        {
-            new Casa106.Domain.Entities.Categoria { Nombre = "Arriendo Airbnb", TipoMovimiento = Casa106.Domain.Enumerations.TipoMovimiento.Ingreso, Grupo = Casa106.Domain.Enumerations.GrupoCategoria.Operacional, Orden = 1 },
-            new Casa106.Domain.Entities.Categoria { Nombre = "Arriendo directo", TipoMovimiento = Casa106.Domain.Enumerations.TipoMovimiento.Ingreso, Grupo = Casa106.Domain.Enumerations.GrupoCategoria.Operacional, Orden = 2 },
-            new Casa106.Domain.Entities.Categoria { Nombre = "Reembolso", TipoMovimiento = Casa106.Domain.Enumerations.TipoMovimiento.Ingreso, Grupo = Casa106.Domain.Enumerations.GrupoCategoria.Otro, Orden = 3 },
-            new Casa106.Domain.Entities.Categoria { Nombre = "Devolución", TipoMovimiento = Casa106.Domain.Enumerations.TipoMovimiento.Ingreso, Grupo = Casa106.Domain.Enumerations.GrupoCategoria.Otro, Orden = 4 },
-            new Casa106.Domain.Entities.Categoria { Nombre = "Otros ingresos", TipoMovimiento = Casa106.Domain.Enumerations.TipoMovimiento.Ingreso, Grupo = Casa106.Domain.Enumerations.GrupoCategoria.Otro, Orden = 5 },
-        };
-
-        // Crear categorías de egreso
-        var categoriasEgreso = new[]
-        {
-            new Casa106.Domain.Entities.Categoria { Nombre = "Comisión administrador", TipoMovimiento = Casa106.Domain.Enumerations.TipoMovimiento.Egreso, Grupo = Casa106.Domain.Enumerations.GrupoCategoria.Operacional, Orden = 1 },
-            new Casa106.Domain.Entities.Categoria { Nombre = "Comisión Airbnb", TipoMovimiento = Casa106.Domain.Enumerations.TipoMovimiento.Egreso, Grupo = Casa106.Domain.Enumerations.GrupoCategoria.Operacional, Orden = 2 },
-            new Casa106.Domain.Entities.Categoria { Nombre = "Aseo", TipoMovimiento = Casa106.Domain.Enumerations.TipoMovimiento.Egreso, Grupo = Casa106.Domain.Enumerations.GrupoCategoria.Operacional, Orden = 3 },
-            new Casa106.Domain.Entities.Categoria { Nombre = "Gastos comunes", TipoMovimiento = Casa106.Domain.Enumerations.TipoMovimiento.Egreso, Grupo = Casa106.Domain.Enumerations.GrupoCategoria.Operacional, Orden = 4 },
-            new Casa106.Domain.Entities.Categoria { Nombre = "Electricidad", TipoMovimiento = Casa106.Domain.Enumerations.TipoMovimiento.Egreso, Grupo = Casa106.Domain.Enumerations.GrupoCategoria.Operacional, Orden = 5 },
-            new Casa106.Domain.Entities.Categoria { Nombre = "Agua", TipoMovimiento = Casa106.Domain.Enumerations.TipoMovimiento.Egreso, Grupo = Casa106.Domain.Enumerations.GrupoCategoria.Operacional, Orden = 6 },
-            new Casa106.Domain.Entities.Categoria { Nombre = "Internet", TipoMovimiento = Casa106.Domain.Enumerations.TipoMovimiento.Egreso, Grupo = Casa106.Domain.Enumerations.GrupoCategoria.Operacional, Orden = 7 },
-            new Casa106.Domain.Entities.Categoria { Nombre = "Gas", TipoMovimiento = Casa106.Domain.Enumerations.TipoMovimiento.Egreso, Grupo = Casa106.Domain.Enumerations.GrupoCategoria.Operacional, Orden = 8 },
-            new Casa106.Domain.Entities.Categoria { Nombre = "Pellet", TipoMovimiento = Casa106.Domain.Enumerations.TipoMovimiento.Egreso, Grupo = Casa106.Domain.Enumerations.GrupoCategoria.Operacional, Orden = 9 },
-            new Casa106.Domain.Entities.Categoria { Nombre = "Mantenimiento", TipoMovimiento = Casa106.Domain.Enumerations.TipoMovimiento.Egreso, Grupo = Casa106.Domain.Enumerations.GrupoCategoria.Operacional, Orden = 10 },
-            new Casa106.Domain.Entities.Categoria { Nombre = "Reparaciones", TipoMovimiento = Casa106.Domain.Enumerations.TipoMovimiento.Egreso, Grupo = Casa106.Domain.Enumerations.GrupoCategoria.Operacional, Orden = 11 },
-            new Casa106.Domain.Entities.Categoria { Nombre = "Muebles y equipamiento", TipoMovimiento = Casa106.Domain.Enumerations.TipoMovimiento.Egreso, Grupo = Casa106.Domain.Enumerations.GrupoCategoria.Inversion, Orden = 12 },
-            new Casa106.Domain.Entities.Categoria { Nombre = "Contribuciones", TipoMovimiento = Casa106.Domain.Enumerations.TipoMovimiento.Egreso, Grupo = Casa106.Domain.Enumerations.GrupoCategoria.Impuesto, Orden = 13 },
-            new Casa106.Domain.Entities.Categoria { Nombre = "Seguros", TipoMovimiento = Casa106.Domain.Enumerations.TipoMovimiento.Egreso, Grupo = Casa106.Domain.Enumerations.GrupoCategoria.Financiero, Orden = 14 },
-            new Casa106.Domain.Entities.Categoria { Nombre = "Dividendo", TipoMovimiento = Casa106.Domain.Enumerations.TipoMovimiento.Egreso, Grupo = Casa106.Domain.Enumerations.GrupoCategoria.Financiero, Orden = 15 },
-            new Casa106.Domain.Entities.Categoria { Nombre = "Otros egresos", TipoMovimiento = Casa106.Domain.Enumerations.TipoMovimiento.Egreso, Grupo = Casa106.Domain.Enumerations.GrupoCategoria.Otro, Orden = 16 },
-        };
-
-        foreach (var cat in categoriasIngreso.Concat(categoriasEgreso))
-        {
-            cat.Id = Guid.NewGuid();
-            cat.Activa = true;
-            context.Categorias.Add(cat);
-        }
-
-        await context.SaveChangesAsync();
-
-        // Crear datos de demostración
-        var catAirbnbIngreso = context.Categorias.First(c => c.Nombre == "Arriendo Airbnb");
-        var catComisionAirbnb = context.Categorias.First(c => c.Nombre == "Comisión Airbnb");
-        var catComisionAdmin = context.Categorias.First(c => c.Nombre == "Comisión administrador");
-        var catElectricidad = context.Categorias.First(c => c.Nombre == "Electricidad");
-        var catGastosComunes = context.Categorias.First(c => c.Nombre == "Gastos comunes");
-        var catInternet = context.Categorias.First(c => c.Nombre == "Internet");
-        var catMuebles = context.Categorias.First(c => c.Nombre == "Muebles y equipamiento");
-        var catDividendo = context.Categorias.First(c => c.Nombre == "Dividendo");
-
-        // Movimientos de demo
-        var movimientos = new[]
-        {
-            new Casa106.Domain.Entities.Movimiento
-            {
-                Id = Guid.NewGuid(),
-                PropiedadId = propiedad.Id,
-                CategoriaId = catAirbnbIngreso.Id,
-                Tipo = Casa106.Domain.Enumerations.TipoMovimiento.Ingreso,
-                Estado = Casa106.Domain.Enumerations.EstadoMovimiento.Confirmado,
-                Origen = Casa106.Domain.Enumerations.OrigenMovimiento.Manual,
-                FechaMovimiento = new DateTime(2026, 7, 15),
-                PeriodoDesde = new DateOnly(2026, 7, 1),
-                PeriodoHasta = new DateOnly(2026, 7, 31),
-                Monto = 540000,
-                Descripcion = "Ingresos Airbnb julio",
-                Proveedor = "Airbnb",
-                FechaCreacion = DateTime.UtcNow
-            },
-            new Casa106.Domain.Entities.Movimiento
-            {
-                Id = Guid.NewGuid(),
-                PropiedadId = propiedad.Id,
-                CategoriaId = catAirbnbIngreso.Id,
-                Tipo = Casa106.Domain.Enumerations.TipoMovimiento.Ingreso,
-                Estado = Casa106.Domain.Enumerations.EstadoMovimiento.Confirmado,
-                Origen = Casa106.Domain.Enumerations.OrigenMovimiento.Manual,
-                FechaMovimiento = new DateTime(2026, 8, 15),
-                PeriodoDesde = new DateOnly(2026, 8, 1),
-                PeriodoHasta = new DateOnly(2026, 8, 31),
-                Monto = 720000,
-                Descripcion = "Ingresos Airbnb agosto",
-                Proveedor = "Airbnb",
-                FechaCreacion = DateTime.UtcNow
-            },
-            new Casa106.Domain.Entities.Movimiento
-            {
-                Id = Guid.NewGuid(),
-                PropiedadId = propiedad.Id,
-                CategoriaId = catElectricidad.Id,
-                Tipo = Casa106.Domain.Enumerations.TipoMovimiento.Egreso,
-                Estado = Casa106.Domain.Enumerations.EstadoMovimiento.Confirmado,
-                Origen = Casa106.Domain.Enumerations.OrigenMovimiento.Manual,
-                FechaMovimiento = new DateTime(2026, 7, 20),
-                PeriodoDesde = new DateOnly(2026, 7, 1),
-                PeriodoHasta = new DateOnly(2026, 7, 31),
-                Monto = 92300,
-                Descripcion = "Cuenta de electricidad julio",
-                FechaCreacion = DateTime.UtcNow
-            },
-            new Casa106.Domain.Entities.Movimiento
-            {
-                Id = Guid.NewGuid(),
-                PropiedadId = propiedad.Id,
-                CategoriaId = catGastosComunes.Id,
-                Tipo = Casa106.Domain.Enumerations.TipoMovimiento.Egreso,
-                Estado = Casa106.Domain.Enumerations.EstadoMovimiento.Confirmado,
-                Origen = Casa106.Domain.Enumerations.OrigenMovimiento.Manual,
-                FechaMovimiento = new DateTime(2026, 7, 5),
-                PeriodoDesde = new DateOnly(2026, 7, 1),
-                PeriodoHasta = new DateOnly(2026, 7, 31),
-                Monto = 85000,
-                Descripcion = "Gastos comunes julio",
-                FechaCreacion = DateTime.UtcNow
-            },
-            new Casa106.Domain.Entities.Movimiento
-            {
-                Id = Guid.NewGuid(),
-                PropiedadId = propiedad.Id,
-                CategoriaId = catInternet.Id,
-                Tipo = Casa106.Domain.Enumerations.TipoMovimiento.Egreso,
-                Estado = Casa106.Domain.Enumerations.EstadoMovimiento.Confirmado,
-                Origen = Casa106.Domain.Enumerations.OrigenMovimiento.Manual,
-                FechaMovimiento = new DateTime(2026, 7, 1),
-                PeriodoDesde = new DateOnly(2026, 7, 1),
-                PeriodoHasta = new DateOnly(2026, 7, 31),
-                Monto = 25000,
-                Descripcion = "Internet julio",
-                FechaCreacion = DateTime.UtcNow
-            },
-            new Casa106.Domain.Entities.Movimiento
-            {
-                Id = Guid.NewGuid(),
-                PropiedadId = propiedad.Id,
-                CategoriaId = catComisionAdmin.Id,
-                Tipo = Casa106.Domain.Enumerations.TipoMovimiento.Egreso,
-                Estado = Casa106.Domain.Enumerations.EstadoMovimiento.Confirmado,
-                Origen = Casa106.Domain.Enumerations.OrigenMovimiento.Manual,
-                FechaMovimiento = new DateTime(2026, 7, 10),
-                PeriodoDesde = new DateOnly(2026, 7, 1),
-                PeriodoHasta = new DateOnly(2026, 7, 31),
-                Monto = 108000,
-                Descripcion = "Comisión administrador julio",
-                Proveedor = "Administrador",
-                FechaCreacion = DateTime.UtcNow
-            },
-            new Casa106.Domain.Entities.Movimiento
-            {
-                Id = Guid.NewGuid(),
-                PropiedadId = propiedad.Id,
-                CategoriaId = catMuebles.Id,
-                Tipo = Casa106.Domain.Enumerations.TipoMovimiento.Egreso,
-                Estado = Casa106.Domain.Enumerations.EstadoMovimiento.Confirmado,
-                Origen = Casa106.Domain.Enumerations.OrigenMovimiento.Manual,
-                FechaMovimiento = new DateTime(2026, 8, 3),
-                Monto = 180000,
-                Descripcion = "Compra de equipamiento",
-                FechaCreacion = DateTime.UtcNow
-            },
-            new Casa106.Domain.Entities.Movimiento
-            {
-                Id = Guid.NewGuid(),
-                PropiedadId = propiedad.Id,
-                CategoriaId = catDividendo.Id,
-                Tipo = Casa106.Domain.Enumerations.TipoMovimiento.Egreso,
-                Estado = Casa106.Domain.Enumerations.EstadoMovimiento.Confirmado,
-                Origen = Casa106.Domain.Enumerations.OrigenMovimiento.Manual,
-                FechaMovimiento = new DateTime(2026, 7, 31),
-                PeriodoDesde = new DateOnly(2026, 7, 1),
-                PeriodoHasta = new DateOnly(2026, 7, 31),
-                Monto = 736362,
-                Descripcion = "Dividendo julio",
-                FechaCreacion = DateTime.UtcNow
-            },
-        };
-
-        foreach (var mov in movimientos)
-            context.Movimientos.Add(mov);
-
-        await context.SaveChangesAsync();
-        await transaction.CommitAsync();
-
-        Log.Information("Base de datos seeded correctamente");
-    }
-    catch (Exception ex)
+    var categorias = new[]
     {
-        await transaction.RollbackAsync();
-        Log.Error(ex, "Error al seedear la base de datos");
-        throw;
-    }
+        new Casa106.Domain.Entities.Categoria { Id = Guid.NewGuid(), Nombre = "Arriendo Airbnb", TipoMovimiento = Casa106.Domain.Enumerations.TipoMovimiento.Ingreso, Grupo = Casa106.Domain.Enumerations.GrupoCategoria.Operacional, Orden = 1, Activa = true },
+        new Casa106.Domain.Entities.Categoria { Id = Guid.NewGuid(), Nombre = "Arriendo directo", TipoMovimiento = Casa106.Domain.Enumerations.TipoMovimiento.Ingreso, Grupo = Casa106.Domain.Enumerations.GrupoCategoria.Operacional, Orden = 2, Activa = true },
+        new Casa106.Domain.Entities.Categoria { Id = Guid.NewGuid(), Nombre = "Reembolso", TipoMovimiento = Casa106.Domain.Enumerations.TipoMovimiento.Ingreso, Grupo = Casa106.Domain.Enumerations.GrupoCategoria.Otro, Orden = 3, Activa = true },
+        new Casa106.Domain.Entities.Categoria { Id = Guid.NewGuid(), Nombre = "Devolución", TipoMovimiento = Casa106.Domain.Enumerations.TipoMovimiento.Ingreso, Grupo = Casa106.Domain.Enumerations.GrupoCategoria.Otro, Orden = 4, Activa = true },
+        new Casa106.Domain.Entities.Categoria { Id = Guid.NewGuid(), Nombre = "Otros ingresos", TipoMovimiento = Casa106.Domain.Enumerations.TipoMovimiento.Ingreso, Grupo = Casa106.Domain.Enumerations.GrupoCategoria.Otro, Orden = 5, Activa = true },
+
+        new Casa106.Domain.Entities.Categoria { Id = Guid.NewGuid(), Nombre = "Comisión administrador", TipoMovimiento = Casa106.Domain.Enumerations.TipoMovimiento.Egreso, Grupo = Casa106.Domain.Enumerations.GrupoCategoria.Operacional, Orden = 1, Activa = true },
+        new Casa106.Domain.Entities.Categoria { Id = Guid.NewGuid(), Nombre = "Comisión Airbnb", TipoMovimiento = Casa106.Domain.Enumerations.TipoMovimiento.Egreso, Grupo = Casa106.Domain.Enumerations.GrupoCategoria.Operacional, Orden = 2, Activa = true },
+        new Casa106.Domain.Entities.Categoria { Id = Guid.NewGuid(), Nombre = "Aseo", TipoMovimiento = Casa106.Domain.Enumerations.TipoMovimiento.Egreso, Grupo = Casa106.Domain.Enumerations.GrupoCategoria.Operacional, Orden = 3, Activa = true },
+        new Casa106.Domain.Entities.Categoria { Id = Guid.NewGuid(), Nombre = "Gastos comunes", TipoMovimiento = Casa106.Domain.Enumerations.TipoMovimiento.Egreso, Grupo = Casa106.Domain.Enumerations.GrupoCategoria.Operacional, Orden = 4, Activa = true },
+        new Casa106.Domain.Entities.Categoria { Id = Guid.NewGuid(), Nombre = "Electricidad", TipoMovimiento = Casa106.Domain.Enumerations.TipoMovimiento.Egreso, Grupo = Casa106.Domain.Enumerations.GrupoCategoria.Operacional, Orden = 5, Activa = true },
+        new Casa106.Domain.Entities.Categoria { Id = Guid.NewGuid(), Nombre = "Agua", TipoMovimiento = Casa106.Domain.Enumerations.TipoMovimiento.Egreso, Grupo = Casa106.Domain.Enumerations.GrupoCategoria.Operacional, Orden = 6, Activa = true },
+        new Casa106.Domain.Entities.Categoria { Id = Guid.NewGuid(), Nombre = "Internet", TipoMovimiento = Casa106.Domain.Enumerations.TipoMovimiento.Egreso, Grupo = Casa106.Domain.Enumerations.GrupoCategoria.Operacional, Orden = 7, Activa = true },
+        new Casa106.Domain.Entities.Categoria { Id = Guid.NewGuid(), Nombre = "Gas", TipoMovimiento = Casa106.Domain.Enumerations.TipoMovimiento.Egreso, Grupo = Casa106.Domain.Enumerations.GrupoCategoria.Operacional, Orden = 8, Activa = true },
+        new Casa106.Domain.Entities.Categoria { Id = Guid.NewGuid(), Nombre = "Pellet", TipoMovimiento = Casa106.Domain.Enumerations.TipoMovimiento.Egreso, Grupo = Casa106.Domain.Enumerations.GrupoCategoria.Operacional, Orden = 9, Activa = true },
+        new Casa106.Domain.Entities.Categoria { Id = Guid.NewGuid(), Nombre = "Mantenimiento", TipoMovimiento = Casa106.Domain.Enumerations.TipoMovimiento.Egreso, Grupo = Casa106.Domain.Enumerations.GrupoCategoria.Operacional, Orden = 10, Activa = true },
+        new Casa106.Domain.Entities.Categoria { Id = Guid.NewGuid(), Nombre = "Reparaciones", TipoMovimiento = Casa106.Domain.Enumerations.TipoMovimiento.Egreso, Grupo = Casa106.Domain.Enumerations.GrupoCategoria.Operacional, Orden = 11, Activa = true },
+        new Casa106.Domain.Entities.Categoria { Id = Guid.NewGuid(), Nombre = "Muebles y equipamiento", TipoMovimiento = Casa106.Domain.Enumerations.TipoMovimiento.Egreso, Grupo = Casa106.Domain.Enumerations.GrupoCategoria.Inversion, Orden = 12, Activa = true },
+        new Casa106.Domain.Entities.Categoria { Id = Guid.NewGuid(), Nombre = "Contribuciones", TipoMovimiento = Casa106.Domain.Enumerations.TipoMovimiento.Egreso, Grupo = Casa106.Domain.Enumerations.GrupoCategoria.Impuesto, Orden = 13, Activa = true },
+        new Casa106.Domain.Entities.Categoria { Id = Guid.NewGuid(), Nombre = "Seguros", TipoMovimiento = Casa106.Domain.Enumerations.TipoMovimiento.Egreso, Grupo = Casa106.Domain.Enumerations.GrupoCategoria.Financiero, Orden = 14, Activa = true },
+        new Casa106.Domain.Entities.Categoria { Id = Guid.NewGuid(), Nombre = "Dividendo", TipoMovimiento = Casa106.Domain.Enumerations.TipoMovimiento.Egreso, Grupo = Casa106.Domain.Enumerations.GrupoCategoria.Financiero, Orden = 15, Activa = true },
+        new Casa106.Domain.Entities.Categoria { Id = Guid.NewGuid(), Nombre = "Otros egresos", TipoMovimiento = Casa106.Domain.Enumerations.TipoMovimiento.Egreso, Grupo = Casa106.Domain.Enumerations.GrupoCategoria.Otro, Orden = 16, Activa = true }
+    };
+
+    context.Propiedades.Add(propiedad);
+    context.Categorias.AddRange(categorias);
+
+    await context.SaveChangesAsync();
 }
-
