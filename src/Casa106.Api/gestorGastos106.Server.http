@@ -1,0 +1,6 @@
+@gestorGastos106.Server_HostAddress = http://localhost:5133
+
+GET {{gestorGastos106.Server_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
