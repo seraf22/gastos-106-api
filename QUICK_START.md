@@ -1,19 +1,19 @@
-# ⚡ Resumen Rápido: Despliegue Vercel + Render
+# ⚡ Resumen Rápido: Despliegue Netlify + Render
 
 Tu proyecto ya está listo para producción. Aquí está el flujo:
 
-## 1️⃣ Frontend (React) → Vercel
+## 1️⃣ Frontend (React) → Netlify
 
 ```bash
 # Solo debes hacer push a GitHub en rama main
 git push origin main
 ```
 
-**En Vercel:**
-1. conecta tu repo: https://vercel.com/new
-2. Vercel automáticamente detecta que es un proyecto Vite
-3. Configura en "Build & Development Settings":
-   - Root Directory: `src/Casa106.Web`
+**En Netlify:**
+1. Ve a https://app.netlify.com/new
+2. Conecta tu repo GitHub
+3. Netlify automáticamente detecta `netlify.toml` y configura:
+   - Base directory: `src/Casa106.Web`
    - Build Command: `npm run build`
    - Output Directory: `dist`
 4. En "Environment Variables" añade:
@@ -22,7 +22,9 @@ git push origin main
    ```
 5. Deploy automático✨
 
-**Tu frontend estará en:** `https://tu-proyecto.vercel.app`
+**Tu frontend estará en:** `https://tu-proyecto.netlify.app`
+
+> **Ventaja Netlify**: Mejor conectividad GitHub que Vercel, más estable
 
 ---
 
