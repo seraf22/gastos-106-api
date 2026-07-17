@@ -1,0 +1,82 @@
+✅ WORKFLOW FIXED - GitHub Actions Now Configured for `master` Branch
+
+El workflow estaba configurado para `main` pero tu rama es `master`.
+
+Cambios realizados:
+✅ .github/workflows/deploy.yml actualizado
+   - Trigger: push a master (antes: main)
+   - Trigger: pull_request a master (antes: main)
+   - Deploy condition: refs/heads/master (antes: refs/heads/main)
+
+¿QUÉ HACER AHORA?
+
+Opción 1: Push nuevamente (RECOMENDADO)
+─────────────────────────────────────────
+
+$ git add .
+$ git commit -m "fix: update workflow for master branch"
+$ git push origin master
+
+GitHub Actions AHORA se ejecutará automáticamente:
+1. Detecta push a master
+2. Compila React (npm run build)
+3. Deploya a GitHub Pages
+4. ¡LIVE en 2-3 minutos!
+
+Opción 2: Cambiar rama a `main`
+──────────────────────────────────
+
+Si prefieres usar `main` en lugar de `master`:
+
+$ git checkout -b main
+$ git config push.default current
+$ git push origin main
+
+Luego actualizar en GitHub:
+- Settings → Branches → Default branch → main
+- Enable GitHub Pages con source: GitHub Actions
+
+VERIFICAR EJECUCIÓN:
+─────────────────────
+
+1. Ve a: https://github.com/seraf22/gestorGastos106/actions
+2. Deberías ver un nuevo workflow ejecutándose
+3. Espera 2-3 minutos
+4. Si pasa a verde ✅, tu frontend está en:
+   https://seraf22.github.io/gestorGastos106
+
+PRÓXIMOS PASOS:
+────────────────
+
+1. ✅ Deploy Frontend
+   $ git push origin master
+   → GitHub Actions auto-deploya en 2-3 min
+
+2. ⏳ Deploy Backend (manual)
+   → Ve a https://dashboard.render.com
+   → New → Web Service
+   → Conecta repo gestorGastos106
+   → Add env variables (BD Aiven)
+   → Deploy (10 min)
+
+3. ✅ Verify Everything
+   Frontend: https://seraf22.github.io/gestorGastos106
+   Backend:  https://casa106-api.onrender.com
+   API:      https://casa106-api.onrender.com/swagger
+
+¿Problemas?
+───────────
+
+Si GitHub Actions aún no ejecuta:
+1. Verifica que GitHub Pages esté habilitado
+   → Settings → Pages → Source: GitHub Actions
+
+2. Verifica que el workflow está en .github/workflows/deploy.yml
+   → Debe estar en la rama master
+
+3. Revisa los logs:
+   → https://github.com/seraf22/gestorGastos106/actions
+   → Click en el workflow
+   → Expande "Run npm run build"
+
+¡Listo! Tu deployment está configurado para `master`. 🚀
