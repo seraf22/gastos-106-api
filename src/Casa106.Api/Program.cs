@@ -70,7 +70,7 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<Casa106DbContext>();
-    await db.Database.MigrateAsync();
+    await db.Database.EnsureCreatedAsync();
     await SeedDatabase(db);
 }
 
