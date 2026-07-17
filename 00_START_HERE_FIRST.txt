@@ -53,6 +53,8 @@
    $ git commit -m "production ready"
    $ git push origin main
 
+   ──────────────────────────────────────────────────────────────
+
    RESULT:
    ──────────────────────────────────────────────────────────────
    ✨ Frontend deploys automatically in 2-3 minutes
