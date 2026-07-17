@@ -31,6 +31,19 @@ if (string.IsNullOrWhiteSpace(connectionString))
 builder.Services.AddDbContext<Casa106DbContext>(options =>
     options.UseNpgsql(connectionString));
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("FrontendPolicy", policy =>
+    {
+        policy
+            .WithOrigins(
+                "https://seraf22.github.io/web-gestor-106"
+            )
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
+
 // Repositories
 builder.Services.AddScoped<IMovimientoRepository, MovimientoRepository>();
 builder.Services.AddScoped<ICategoriaRepository, CategoriaRepository>();
