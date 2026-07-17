@@ -1,6 +1,6 @@
 ﻿# Build stage
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
-WORKDIR /src
+WORKDIR /repo
 # Copy entire source structure
 COPY . .
 # Restore and publish
