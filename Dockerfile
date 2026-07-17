@@ -1,46 +1,20 @@
-# ─── Etapa 1: build ───────────────────────────────────────────────────────────
+﻿# Build stage
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
-WORKDIR /repo
-
-# Copiar archivos de solución y proyectos primero
-COPY Casa106.sln .
-COPY src/Casa106.Domain/Casa106.Domain.csproj          src/Casa106.Domain/
-COPY src/Casa106.Application/Casa106.Application.csproj src/Casa106.Application/
-COPY src/Casa106.Infrastructure/Casa106.Infrastructure.csproj src/Casa106.Infrastructure/
-COPY src/Casa106.Api/Casa106.Api.csproj                src/Casa106.Api/
-
-# Copiar TODOS los archivos de código fuente .NET ANTES de restore
-# Esto asegura que las referencias de proyecto se resuelvan correctamente
-COPY src/Casa106.Domain/       src/Casa106.Domain/
-COPY src/Casa106.Application/  src/Casa106.Application/
-COPY src/Casa106.Infrastructure/ src/Casa106.Infrastructure/
-COPY src/Casa106.Api/          src/Casa106.Api/
-
-# Ahora restaurar después de que toda la estructura esté presente
-RUN dotnet restore src/Casa106.Api/Casa106.Api.csproj \
-	--ignore-failed-sources
-
-# Publicar en modo Release
-RUN dotnet publish src/Casa106.Api/Casa106.Api.csproj \
-	-c Release \
-	-o /app/publish \
-	--no-restore \
-	/p:UseAppHost=false
-
-# ─── Etapa 2: runtime ─────────────────────────────────────────────────────────
+WORKDIR /src
+# Copy entire source structure
+COPY . .
+# Restore and publish
+RUN dotnet restore "src/Casa106.Api/Casa106.Api.csproj"
+RUN dotnet publish "src/Casa106.Api/Casa106.Api.csproj" -c Release -o /app/publish --no-restore
+# Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
-
-# Crear directorio para uploads (almacenamiento local de documentos)
+# Create upload directory
 RUN mkdir -p /app/uploads
-
-# Variables de entorno de producción
+# Set environment variables
 ENV ASPNETCORE_ENVIRONMENT=Production
 ENV ASPNETCORE_URLS=http://+:8080
-ENV DOTNET_RUNNING_IN_CONTAINER=true
-
+# Copy published app
 COPY --from=build /app/publish .
-
 EXPOSE 8080
-
-ENTRYPOINT ["dotnet", "Casa106.Api.dll"]ENTRYPOINT ["dotnet", "Casa106.Api.dll"]
+ENTRYPOINT ["dotnet", "Casa106.Api.dll"]
