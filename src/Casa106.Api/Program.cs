@@ -79,6 +79,8 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+app.UseCors("FrontendPolicy");
+
 // Inicializar y seed de base de datos
 using (var scope = app.Services.CreateScope())
 {
