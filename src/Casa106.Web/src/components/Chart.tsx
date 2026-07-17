@@ -11,7 +11,7 @@ export function Chart({ data, title, type }: ChartDataProps) {
     <div className="bg-white rounded-lg shadow-md p-6">
       <h3 className="text-lg font-semibold text-gray-900 mb-4">{title}</h3>
       <ResponsiveContainer width="100%" height={300}>
-        {type === 'bar' && (
+        {type === 'bar' ? (
           <BarChart data={data}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="name" />
@@ -21,8 +21,7 @@ export function Chart({ data, title, type }: ChartDataProps) {
             <Bar dataKey="ingresos" fill="#16a34a" name="Ingresos" />
             <Bar dataKey="egresos" fill="#dc2626" name="Egresos" />
           </BarChart>
-        )}
-        {type === 'line' && (
+        ) : type === 'line' ? (
           <LineChart data={data}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="name" />
@@ -31,8 +30,7 @@ export function Chart({ data, title, type }: ChartDataProps) {
             <Legend />
             <Line type="monotone" dataKey="saldo" stroke="#1e40af" strokeWidth={2} />
           </LineChart>
-        )}
-        {type === 'pie' && (
+        ) : (
           <PieChart>
             <Pie data={data} cx="50%" cy="50%" labelLine={false} label={renderCustomLabel} outerRadius={80} fill="#8884d8" dataKey="value">
               {data.map((entry, index) => (
