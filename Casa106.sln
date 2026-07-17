@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
-VisualStudioVersion = 18.9.12009.208 insiders
+VisualStudioVersion = 18.9.12009.208
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Casa106.Api", "src\Casa106.Api\Casa106.Api.csproj", "{1EA1877F-CD10-4FAF-9B71-158F2F5480FE}"
 EndProject
@@ -10,8 +10,6 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Casa106.Application", "src\Casa106.Application\Casa106.Application.csproj", "{9163CD71-337A-49D9-8F06-05299E1D3BF6}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Casa106.Infrastructure", "src\Casa106.Infrastructure\Casa106.Infrastructure.csproj", "{A5D62268-B880-4518-922F-B59028C4F806}"
-EndProject
-Project("{54A90642-561A-4BB1-A94E-469ADEE60C69}") = "Casa106.Web", "src\Casa106.Web\Casa106.Web.esproj", "{3243677A-5EC2-44D6-B513-5B3F128216EE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -35,12 +33,6 @@ Global
 		{A5D62268-B880-4518-922F-B59028C4F806}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A5D62268-B880-4518-922F-B59028C4F806}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A5D62268-B880-4518-922F-B59028C4F806}.Release|Any CPU.Build.0 = Release|Any CPU
-		{3243677A-5EC2-44D6-B513-5B3F128216EE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{3243677A-5EC2-44D6-B513-5B3F128216EE}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{3243677A-5EC2-44D6-B513-5B3F128216EE}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
-		{3243677A-5EC2-44D6-B513-5B3F128216EE}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{3243677A-5EC2-44D6-B513-5B3F128216EE}.Release|Any CPU.Build.0 = Release|Any CPU
-		{3243677A-5EC2-44D6-B513-5B3F128216EE}.Release|Any CPU.Deploy.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

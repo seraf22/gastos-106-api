@@ -5,16 +5,10 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <InvariantGlobalization>false</InvariantGlobalization>
-    <SpaRoot>..\Casa106.Web</SpaRoot>
-    <SpaProxyLaunchCommand>npm run dev</SpaProxyLaunchCommand>
-    <SpaProxyServerUrl>https://localhost:5173</SpaProxyServerUrl>
     <UserSecretsId>692d7d2e-9a28-4436-8120-832127ff198d</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.SpaProxy">
-      <Version>8.*-*</Version>
-    </PackageReference>
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.4" />
 
@@ -26,9 +20,6 @@
     <ProjectReference Include="..\Casa106.Domain\Casa106.Domain.csproj" />
     <ProjectReference Include="..\Casa106.Application\Casa106.Application.csproj" />
     <ProjectReference Include="..\Casa106.Infrastructure\Casa106.Infrastructure.csproj" />
-    <ProjectReference Include="..\Casa106.Web\Casa106.Web.esproj">
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-    </ProjectReference>
   </ItemGroup>
 
 </Project>
