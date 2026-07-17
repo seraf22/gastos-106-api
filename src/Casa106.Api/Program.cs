@@ -7,12 +7,6 @@ using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var port = Environment.GetEnvironmentVariable("PORT");
-if (!string.IsNullOrEmpty(port))
-{
-    builder.WebHost.UseUrls($"http://*:{port}");
-}
-
 // Configurar Serilog
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Debug()
