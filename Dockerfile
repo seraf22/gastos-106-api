@@ -11,7 +11,7 @@ COPY src/Casa106.Domain/Casa106.Domain.csproj src/Casa106.Domain/
 COPY src/Casa106.Infrastructure/Casa106.Infrastructure.csproj src/Casa106.Infrastructure/
 
 # Restaurar paquetes
-RUN dotnet restore Casa106.sln
+RUN dotnet restore src/Casa106.Api/Casa106.Api.csproj
 
 # Copiar el resto del código
 COPY . .
