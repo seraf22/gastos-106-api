@@ -15,10 +15,29 @@ public class Casa106DbContext : DbContext
     public DbSet<Documento> Documentos { get; set; }
     public DbSet<ProcesamientoIA> ProcesaminetosIA { get; set; }
     public DbSet<OcupacionMensual> Ocupaciones { get; set; }
+    public DbSet<Usuario> Usuarios { get; set; } = null!;
+
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        modelBuilder.Entity<Usuario>(b =>
+        {
+            b.ToTable("Usuarios");
+            b.Property(u => u.Id).HasColumnName("Id");
+            b.Property(u => u.User).HasColumnName("User");
+            b.Property(u => u.Email).HasColumnName("Email").IsRequired(false);
+            b.Property(u => u.PasswordHash).HasColumnName("PasswordHash");
+            b.Property(u => u.Rol).HasColumnName("Rol");
+            b.Property(u => u.IsActive).HasColumnName("IsActive");
+            b.Property(u => u.CreatedAt).HasColumnName("CreatedAt");
+            b.Property(u => u.LastLogin).HasColumnName("LastLogin").IsRequired(false);
+            b.HasKey(u => u.Id);
+            b.HasIndex(u => u.User).IsUnique();
+            b.Property(u => u.User).IsRequired();
+            b.Property(u => u.PasswordHash).IsRequired();
+        });
 
         // Propiedad
         modelBuilder.Entity<Propiedad>()
