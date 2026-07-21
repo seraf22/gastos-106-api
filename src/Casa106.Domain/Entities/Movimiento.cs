@@ -11,6 +11,8 @@ public class Movimiento
     public EstadoMovimiento Estado { get; set; } = EstadoMovimiento.PendienteRevision;
     public OrigenMovimiento Origen { get; set; }
     public DateTime FechaMovimiento { get; set; }
+    // MesDevengo indica el mes al que corresponde el gasto (obligatorio)
+    public DateOnly MesDevengo { get; set; }
     public DateOnly? PeriodoDesde { get; set; }
     public DateOnly? PeriodoHasta { get; set; }
     public decimal Monto { get; set; }

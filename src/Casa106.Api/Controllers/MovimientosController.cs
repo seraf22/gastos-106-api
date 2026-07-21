@@ -83,6 +83,8 @@ public class MovimientosController : ControllerBase
                 request.FechaMovimiento,
                 DateTimeKind.Utc
             ),
+            // MesDevengo obligatorio
+            MesDevengo = request.MesDevengo,
             PeriodoDesde = request.PeriodoDesde,
             PeriodoHasta = request.PeriodoHasta,
             Monto = request.Monto,
@@ -114,6 +116,7 @@ public class MovimientosController : ControllerBase
         movimiento.CategoriaId = categoria.Id;
         movimiento.Tipo = Enum.Parse<TipoMovimiento>(request.Tipo);
         movimiento.FechaMovimiento = request.FechaMovimiento;
+        movimiento.MesDevengo = request.MesDevengo;
         movimiento.PeriodoDesde = request.PeriodoDesde;
         movimiento.PeriodoHasta = request.PeriodoHasta;
         movimiento.Monto = request.Monto;
@@ -148,6 +151,7 @@ public class MovimientosController : ControllerBase
         Estado = m.Estado.ToString(),
         Origen = m.Origen.ToString(),
         FechaMovimiento = m.FechaMovimiento,
+        MesDevengo = m.MesDevengo,
         PeriodoDesde = m.PeriodoDesde,
         PeriodoHasta = m.PeriodoHasta,
         Monto = m.Monto,

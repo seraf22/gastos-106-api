@@ -9,6 +9,8 @@ public class MovimientoDto
     public string Estado { get; set; } = string.Empty;
     public string Origen { get; set; } = string.Empty;
     public DateTime FechaMovimiento { get; set; }
+    // MesDevengo indica el mes al que corresponde el gasto (obligatorio)
+    public DateOnly MesDevengo { get; set; }
     public DateOnly? PeriodoDesde { get; set; }
     public DateOnly? PeriodoHasta { get; set; }
     public decimal Monto { get; set; }
